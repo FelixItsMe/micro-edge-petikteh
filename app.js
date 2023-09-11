@@ -186,14 +186,14 @@ app.post("/open", (req, res) => {
         // Define the data to be inserted
         const dataQeury = {
           id_perangkat: IDperangkat,
-          suhu: suhu,
-          kelembapan: kelembapan,
-          lat: latitude,
-          lng: longitude,
-          roll: roll,
-          pitch: pitch,
-          yaw: yaw,
-          vbatt: vbatt,
+          suhu: isNaN(parseFloat(suhu)) ? parseFloat(suhu) : null,
+          kelembapan: isNaN(parseFloat(kelembapan)) ? parseFloat(kelembapan) : null,
+          lat: isNaN(parseFloat(latitude)) ? parseFloat(latitude) : null,
+          lng: isNaN(parseFloat(longitude)) ? parseFloat(longitude) : null,
+          roll: isNaN(parseFloat(roll)) ? parseFloat(roll) : null,
+          pitch: isNaN(parseFloat(pitch)) ? parseFloat(pitch) : null,
+          yaw: isNaN(parseFloat(yaw)) ? parseFloat(yaw) : null,
+          vbatt: isNaN(parseFloat(vbatt)) ? parseFloat(vbatt) : null,
           created_at: myDate,
           perangkat_edge_no_seri: req.body.noSeriEdge
         };
