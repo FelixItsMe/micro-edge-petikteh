@@ -130,11 +130,11 @@ app.post("/open", (req, res) => {
   parser.on("data", (data) => {
     console.log("got word from arduino: " + data);
     // const val = JSON.parse(data)
-    console.log(data.split("&"));
     let dataInserted = false;
 
     if (data.split("&").length == 2 && !dataInserted) {
       let [repeter, edge] = data.split("&")
+      console.log(edge);
       if (edge.split(",").length == 10) {
         let [
           IDperangkat,
@@ -198,7 +198,7 @@ app.post("/open", (req, res) => {
           created_at: myDate,
           perangkat_edge_no_seri: req.body.noSeriEdge
         };
-        
+
         // Set the flag to true to prevent further inserts
         dataInserted = true;
 
