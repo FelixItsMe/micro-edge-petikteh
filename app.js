@@ -7,6 +7,7 @@ const { autoDetect } = require("@serialport/bindings-cpp");
 const io = require("socket.io-client");
 const axios = require("axios");
 const cors = require("cors");
+const pattern = /MPGMBG/;
 require("dotenv").config();
 
 // Connect to Laravel WebSocket server
@@ -133,7 +134,7 @@ app.post("/open", (req, res) => {
     let dataInserted = false;
 
     if (data.split("&").length == 2 && !dataInserted) {
-      let [repeter, edge] = data.split("&")
+      let [repeter, edge] = data.split("&");
       console.log(edge);
       if (edge.split(",").length == 10) {
         let [
@@ -149,69 +150,73 @@ app.post("/open", (req, res) => {
           tail,
         ] = edge.split(",");
 
-        let date_ob = new Date();
+        if (pattern.test(IDperangkat)) {
+          let date_ob = new Date();
 
-        // current date
-        // adjust 0 before single digit date
-        let date = ("0" + date_ob.getDate()).slice(-2);
+          // current date
+          // adjust 0 before single digit date
+          let date = ("0" + date_ob.getDate()).slice(-2);
 
-        // current month
-        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+          // current month
+          let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
 
-        // current year
-        let year = date_ob.getFullYear();
+          // current year
+          let year = date_ob.getFullYear();
 
-        // current hours
-        let hours = ("0" + date_ob.getHours()).slice(-2);
+          // current hours
+          let hours = ("0" + date_ob.getHours()).slice(-2);
 
-        // current minutes
-        let minutes = ("0" + date_ob.getMinutes()).slice(-2);
+          // current minutes
+          let minutes = ("0" + date_ob.getMinutes()).slice(-2);
 
-        // current seconds
-        let seconds = ("0" + date_ob.getSeconds()).slice(-2);
+          // current seconds
+          let seconds = ("0" + date_ob.getSeconds()).slice(-2);
 
-        // prints date & time in YYYY-MM-DD HH:MM:SS format
-        const myDate =
-          year +
-          "-" +
-          month +
-          "-" +
-          date +
-          " " +
-          hours +
-          ":" +
-          minutes +
-          ":" +
-          seconds;
+          // prints date & time in YYYY-MM-DD HH:MM:SS format
+          const myDate =
+            year +
+            "-" +
+            month +
+            "-" +
+            date +
+            " " +
+            hours +
+            ":" +
+            minutes +
+            ":" +
+            seconds;
 
-        // Define the data to be inserted
-        const dataQeury = {
-          id_perangkat: IDperangkat,
-          suhu: isNaN(parseFloat(suhu)) ? null : parseFloat(suhu),
-          kelembapan: isNaN(parseFloat(kelembapan)) ? null : parseFloat(kelembapan),
-          lat: isNaN(parseFloat(latitude)) ? null : parseFloat(latitude),
-          lng: isNaN(parseFloat(longitude)) ? null : parseFloat(longitude),
-          roll: isNaN(parseFloat(roll)) ? null : parseFloat(roll),
-          pitch: isNaN(parseFloat(pitch)) ? null : parseFloat(pitch),
-          yaw: isNaN(parseFloat(yaw)) ? null : parseFloat(yaw),
-          vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
-          created_at: myDate,
-          perangkat_edge_no_seri: req.body.noSeriEdge
-        };
+          // Define the data to be inserted
+          const dataQeury = {
+            id_perangkat: IDperangkat,
+            suhu: isNaN(parseFloat(suhu)) ? null : parseFloat(suhu),
+            kelembapan: isNaN(parseFloat(kelembapan))
+              ? null
+              : parseFloat(kelembapan),
+            lat: isNaN(parseFloat(latitude)) ? null : parseFloat(latitude),
+            lng: isNaN(parseFloat(longitude)) ? null : parseFloat(longitude),
+            roll: isNaN(parseFloat(roll)) ? null : parseFloat(roll),
+            pitch: isNaN(parseFloat(pitch)) ? null : parseFloat(pitch),
+            yaw: isNaN(parseFloat(yaw)) ? null : parseFloat(yaw),
+            vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
+            created_at: myDate,
+            perangkat_edge_no_seri: req.body.noSeriEdge,
+          };
 
-        // Set the flag to true to prevent further inserts
-        dataInserted = true;
+          // Set the flag to true to prevent further inserts
+          dataInserted = true;
 
-        // Insert the data into the "monitoring_portable" table
-        connection.query(
-          "INSERT INTO monitoring_portable SET ?",
-          dataQeury,
-          function (err, result) {
-            if (err) throw err;
-            console.log("Data inserted successfully.");
-            // console.log('Result:', result);
-          }
-        );
+          // Insert the data into the "monitoring_portable" table
+          connection.query(
+            "INSERT INTO monitoring_portable SET ?",
+            dataQeury,
+            function (err, result) {
+              if (err) throw err;
+              console.log("Data inserted successfully.");
+              // console.log('Result:', result);
+            }
+          );
+        }
       }
     }
     // const contoh = "-6.967658000,107.658933667,734.30,1.57,284.07,119.80,11.80,1494.00,0,Siap,-244,1328,-14776,-115,213,260,*"
