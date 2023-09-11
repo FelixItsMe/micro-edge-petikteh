@@ -131,8 +131,9 @@ app.post("/open", (req, res) => {
     console.log("got word from arduino: " + data);
     // const val = JSON.parse(data)
     console.log(data.split("&"));
+    let dataInserted = false;
 
-    if (data.split("&").length == 2) {
+    if (data.split("&").length == 2 && !dataInserted) {
       let [repeter, edge] = data.split("&")
       if (edge.split(",").length == 10) {
         let [
@@ -197,6 +198,9 @@ app.post("/open", (req, res) => {
           created_at: myDate,
           perangkat_edge_no_seri: req.body.noSeriEdge
         };
+        
+        // Set the flag to true to prevent further inserts
+        dataInserted = true;
 
         // Insert the data into the "monitoring_portable" table
         connection.query(
