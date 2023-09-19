@@ -32,6 +32,8 @@ let wsStatus = false;
 let serialPorts = [];
 const Binding = autoDetect();
 let dataPayload;
+let loraMessages = ""
+let loraStatus = 0
 
 SerialPort.list().then(function (ports) {
   // Open a serial port for each available port
@@ -51,11 +53,42 @@ SerialPort.list().then(function (ports) {
   });
 });
 
+// const loraPort = new SerialPort({
+//   path: 'COM5',
+//   baudRate: 115200
+// })
+
+// // Switches the port into "flowing mode"
+// loraPort.on('data', function (data) {
+//   let decodeData = new TextDecoder().decode(data)
+
+//   if(loraStatus == 0 && decodeData.substring(0, 3) == "*01"){
+//     loraStatus = 1
+//     loraMessages = ""
+//   }
+
+//   if (loraStatus == 1) {
+//     loraMessages += decodeData
+//     console.log("Read Data...");
+//   }
+
+//   if (decodeData.substring(decodeData.length-2) == "*#") {
+//     loraStatus = 0
+//     let [first, mainData, last] = loraMessages.split("&&")
+//     let parseData = JSON.parse(mainData)
+//     console.log(parseData.image, parseData);
+//     require("fs").writeFile("out.png", parseData.image, 'base64', function(err) {
+//       console.log(err);
+//     });
+//   }
+// })
+
 app.use(cors());
 app.use(bodyParser.json());
 
 //IMPORT ROUTES
 const postsRoute = require("./routes/posts");
+const { log } = require("console");
 
 app.use("/posts", postsRoute);
 
@@ -136,7 +169,7 @@ app.post("/open", (req, res) => {
     if (data.split("&").length == 2 && !dataInserted) {
       let [repeter, edge] = data.split("&");
       console.log(edge);
-      if (edge.split(",").length == 10) {
+      if (edge && edge.split(",").length == 10) {
         let [
           IDperangkat,
           latitude,
