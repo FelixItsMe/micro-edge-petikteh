@@ -166,93 +166,125 @@ app.post("/open", (req, res) => {
     // const val = JSON.parse(data)
     let dataInserted = false;
 
-    if (data.split("&").length == 2 && !dataInserted) {
-      let [repeter, edge] = data.split("&");
-      console.log(edge);
-      if (edge && edge.split(",").length == 10) {
-        let [
-          IDperangkat,
-          latitude,
-          longitude,
-          suhu,
-          kelembapan,
-          roll,
-          pitch,
-          yaw,
-          vbatt,
-          tail,
-        ] = edge.split(",");
+    let edge = data;
 
-        if (pattern.test(IDperangkat)) {
-          let date_ob = new Date();
+    // if (data.split("&").length == 2 && !dataInserted) {
+    //   let [repeter, edge] = data.split("&");
+    //   console.log(edge);
+    // }
 
-          // current date
-          // adjust 0 before single digit date
-          let date = ("0" + date_ob.getDate()).slice(-2);
+    console.log(edge.split(",").length);
 
-          // current month
-          let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+    if (edge && edge.split(",").length == 10) {
+      // let [
+      //   IDperangkat,
+      //   latitude,
+      //   longitude,
+      //   suhu,
+      //   kelembapan,
+      //   roll,
+      //   pitch,
+      //   yaw,
+      //   vbatt,
+      //   tail,
+      // ] = edge.split(",");
 
-          // current year
-          let year = date_ob.getFullYear();
+      let [
+        IDperangkat,
+        latitude,
+        longitude,
+        altitude,
+        jarakR,
+        jarakG,
+        arahR,
+        arahG,
+        rssi
+      ] = edge.split(",");
 
-          // current hours
-          let hours = ("0" + date_ob.getHours()).slice(-2);
+      if (pattern.test(IDperangkat)) {
+        let date_ob = new Date();
 
-          // current minutes
-          let minutes = ("0" + date_ob.getMinutes()).slice(-2);
+        // current date
+        // adjust 0 before single digit date
+        let date = ("0" + date_ob.getDate()).slice(-2);
 
-          // current seconds
-          let seconds = ("0" + date_ob.getSeconds()).slice(-2);
+        // current month
+        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
 
-          // prints date & time in YYYY-MM-DD HH:MM:SS format
-          const myDate =
-            year +
-            "-" +
-            month +
-            "-" +
-            date +
-            " " +
-            hours +
-            ":" +
-            minutes +
-            ":" +
-            seconds;
+        // current year
+        let year = date_ob.getFullYear();
 
-          // Define the data to be inserted
-          const dataQeury = {
-            id_perangkat: IDperangkat,
-            suhu: isNaN(parseFloat(suhu)) ? null : parseFloat(suhu),
-            kelembapan: isNaN(parseFloat(kelembapan))
-              ? null
-              : parseFloat(kelembapan),
-            lat: isNaN(parseFloat(latitude)) ? null : parseFloat(latitude),
-            lng: isNaN(parseFloat(longitude)) ? null : parseFloat(longitude),
-            roll: isNaN(parseFloat(roll)) ? null : parseFloat(roll),
-            pitch: isNaN(parseFloat(pitch)) ? null : parseFloat(pitch),
-            yaw: isNaN(parseFloat(yaw)) ? null : parseFloat(yaw),
-            vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
-            created_at: myDate,
-            perangkat_edge_no_seri: req.body.noSeriEdge,
-          };
+        // current hours
+        let hours = ("0" + date_ob.getHours()).slice(-2);
 
-          // Set the flag to true to prevent further inserts
-          dataInserted = true;
+        // current minutes
+        let minutes = ("0" + date_ob.getMinutes()).slice(-2);
 
-          // Insert the data into the "monitoring_portable" table
-          connection.query(
-            "INSERT INTO monitoring_portable SET ?",
-            dataQeury,
-            function (err, result) {
-              if (err) throw err;
-              console.log("Data inserted successfully.");
-              // console.log('Result:', result);
-            }
-          );
+        // current seconds
+        let seconds = ("0" + date_ob.getSeconds()).slice(-2);
+
+        // prints date & time in YYYY-MM-DD HH:MM:SS format
+        const myDate =
+          year +
+          "-" +
+          month +
+          "-" +
+          date +
+          " " +
+          hours +
+          ":" +
+          minutes +
+          ":" +
+          seconds;
+
+        // Define the data to be inserted
+        // const dataQeury = {
+        //   id_perangkat: IDperangkat,
+        //   suhu: isNaN(parseFloat(suhu)) ? null : parseFloat(suhu),
+        //   kelembapan: isNaN(parseFloat(kelembapan))
+        //     ? null
+        //     : parseFloat(kelembapan),
+        //   lat: isNaN(parseFloat(latitude)) ? null : parseFloat(latitude),
+        //   lng: isNaN(parseFloat(longitude)) ? null : parseFloat(longitude),
+        //   roll: isNaN(parseFloat(roll)) ? null : parseFloat(roll),
+        //   pitch: isNaN(parseFloat(pitch)) ? null : parseFloat(pitch),
+        //   yaw: isNaN(parseFloat(yaw)) ? null : parseFloat(yaw),
+        //   vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
+        //   created_at: myDate,
+        //   perangkat_edge_no_seri: req.body.noSeriEdge,
+        // };
+
+        const dataQeury = {
+          id_perangkat: IDperangkat,
+          lat: latitude,
+          lng: longitude,
+          created_at: myDate,
+          perangkat_iot_no_seri: req.body.noSeriEdge,
+          edge_attribute: JSON.stringify({
+            altitude: altitude,
+            jarakR: jarakR,
+            jarakG: jarakG,
+            arahR: arahR,
+            arahG: arahG,
+            rssi: rssi
+          })
         }
+
+        // Set the flag to true to prevent further inserts
+        dataInserted = true;
+
+        // Insert the data into the "monitoring_portable" table
+        connection.query(
+          "INSERT INTO monitoring_portable SET ?",
+          dataQeury,
+          function (err, result) {
+            if (err) throw err;
+            console.log("Data inserted successfully.");
+            // console.log('Result:', result);
+          }
+        );
       }
     }
-    // const contoh = "-6.967658000,107.658933667,734.30,1.57,284.07,119.80,11.80,1494.00,0,Siap,-244,1328,-14776,-115,213,260,*"
   });
 });
 
