@@ -175,7 +175,7 @@ app.post("/open", (req, res) => {
 
     console.log(edge.split(",").length);
 
-    if (edge && edge.split(",").length == 10) {
+    if (edge && edge.split(",").length == 11) {
       let [
         IDperangkat,
         latitude,
