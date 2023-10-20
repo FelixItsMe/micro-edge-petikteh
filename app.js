@@ -180,6 +180,7 @@ app.post("/open", (req, res) => {
         IDperangkat,
         latitude,
         longitude,
+        altitude,
         suhu,
         kelembapan,
         roll,
@@ -252,6 +253,9 @@ app.post("/open", (req, res) => {
           vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
           created_at: myDate,
           perangkat_edge_no_seri: req.body.noSeriEdge,
+          edge_attribute: JSON.stringify({
+            altitude: altitude,
+          })
         };
 
         // const dataQeury = {
@@ -260,14 +264,14 @@ app.post("/open", (req, res) => {
         //   lng: longitude,
         //   created_at: myDate,
         //   perangkat_iot_no_seri: req.body.noSeriEdge,
-        //   edge_attribute: JSON.stringify({
-        //     altitude: altitude,
-        //     jarakR: jarakR,
-        //     jarakG: jarakG,
-        //     arahR: arahR,
-        //     arahG: arahG,
-        //     rssi: rssi
-        //   })
+          // edge_attribute: JSON.stringify({
+          //   altitude: altitude,
+          //   jarakR: jarakR,
+          //   jarakG: jarakG,
+          //   arahR: arahR,
+          //   arahG: arahG,
+          //   rssi: rssi
+          // })
         // }
 
         // Set the flag to true to prevent further inserts
