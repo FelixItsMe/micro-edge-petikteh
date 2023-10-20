@@ -252,7 +252,7 @@ app.post("/open", (req, res) => {
           yaw: isNaN(parseFloat(yaw)) ? null : parseFloat(yaw),
           vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
           created_at: myDate,
-          perangkat_edge_no_seri: req.body.noSeriEdge,
+          perangkat_iot_no_seri: req.body.noSeriEdge,
           edge_attribute: JSON.stringify({
             altitude: altitude,
           })
