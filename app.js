@@ -40,7 +40,7 @@ SerialPort.list().then(function (ports) {
   ports.forEach(function (port) {
     const serialPort = new SerialPort({
       path: port.path,
-      baudRate: 9600,
+      baudRate: 115200,
       autoOpen: false,
     });
 
