@@ -176,30 +176,30 @@ app.post("/open", (req, res) => {
     console.log(edge.split(",").length);
 
     if (edge && edge.split(",").length == 10) {
-      // let [
-      //   IDperangkat,
-      //   latitude,
-      //   longitude,
-      //   suhu,
-      //   kelembapan,
-      //   roll,
-      //   pitch,
-      //   yaw,
-      //   vbatt,
-      //   tail,
-      // ] = edge.split(",");
-
       let [
         IDperangkat,
         latitude,
         longitude,
-        altitude,
-        jarakR,
-        jarakG,
-        arahR,
-        arahG,
-        rssi
+        suhu,
+        kelembapan,
+        roll,
+        pitch,
+        yaw,
+        vbatt,
+        tail,
       ] = edge.split(",");
+
+      // let [
+      //   IDperangkat,
+      //   latitude,
+      //   longitude,
+      //   altitude,
+      //   jarakR,
+      //   jarakG,
+      //   arahR,
+      //   arahG,
+      //   rssi
+      // ] = edge.split(",");
 
       if (pattern.test(IDperangkat)) {
         let date_ob = new Date();
@@ -238,37 +238,37 @@ app.post("/open", (req, res) => {
           seconds;
 
         // Define the data to be inserted
-        // const dataQeury = {
-        //   id_perangkat: IDperangkat,
-        //   suhu: isNaN(parseFloat(suhu)) ? null : parseFloat(suhu),
-        //   kelembapan: isNaN(parseFloat(kelembapan))
-        //     ? null
-        //     : parseFloat(kelembapan),
-        //   lat: isNaN(parseFloat(latitude)) ? null : parseFloat(latitude),
-        //   lng: isNaN(parseFloat(longitude)) ? null : parseFloat(longitude),
-        //   roll: isNaN(parseFloat(roll)) ? null : parseFloat(roll),
-        //   pitch: isNaN(parseFloat(pitch)) ? null : parseFloat(pitch),
-        //   yaw: isNaN(parseFloat(yaw)) ? null : parseFloat(yaw),
-        //   vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
-        //   created_at: myDate,
-        //   perangkat_edge_no_seri: req.body.noSeriEdge,
-        // };
-
         const dataQeury = {
           id_perangkat: IDperangkat,
-          lat: latitude,
-          lng: longitude,
+          suhu: isNaN(parseFloat(suhu)) ? null : parseFloat(suhu),
+          kelembapan: isNaN(parseFloat(kelembapan))
+            ? null
+            : parseFloat(kelembapan),
+          lat: isNaN(parseFloat(latitude)) ? null : parseFloat(latitude),
+          lng: isNaN(parseFloat(longitude)) ? null : parseFloat(longitude),
+          roll: isNaN(parseFloat(roll)) ? null : parseFloat(roll),
+          pitch: isNaN(parseFloat(pitch)) ? null : parseFloat(pitch),
+          yaw: isNaN(parseFloat(yaw)) ? null : parseFloat(yaw),
+          vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
           created_at: myDate,
-          perangkat_iot_no_seri: req.body.noSeriEdge,
-          edge_attribute: JSON.stringify({
-            altitude: altitude,
-            jarakR: jarakR,
-            jarakG: jarakG,
-            arahR: arahR,
-            arahG: arahG,
-            rssi: rssi
-          })
-        }
+          perangkat_edge_no_seri: req.body.noSeriEdge,
+        };
+
+        // const dataQeury = {
+        //   id_perangkat: IDperangkat,
+        //   lat: latitude,
+        //   lng: longitude,
+        //   created_at: myDate,
+        //   perangkat_iot_no_seri: req.body.noSeriEdge,
+        //   edge_attribute: JSON.stringify({
+        //     altitude: altitude,
+        //     jarakR: jarakR,
+        //     jarakG: jarakG,
+        //     arahR: arahR,
+        //     arahG: arahG,
+        //     rssi: rssi
+        //   })
+        // }
 
         // Set the flag to true to prevent further inserts
         dataInserted = true;
