@@ -7,6 +7,7 @@ const { autoDetect } = require("@serialport/bindings-cpp");
 const io = require("socket.io-client");
 const axios = require("axios");
 const cors = require("cors");
+const osu = require('node-os-utils');
 const pattern = /MPGMBG/;
 require("dotenv").config();
 
@@ -34,22 +35,119 @@ const Binding = autoDetect();
 let dataPayload;
 let loraMessages = ""
 let loraStatus = 0
+let persentageCpuUsage = 0
+const cpu = osu.cpu;
+const dataLength = 12
+// const portRegex = /Silicon Labs CP210x USB to UART Bridge/g;
+const portRegex = /USB-Enhanced-SERIAL CH9102/g;
+
+async function usegeInterval(){
+  return await cpu.usage()
+}
 
 SerialPort.list().then(function (ports) {
   // Open a serial port for each available port
-  ports.forEach(function (port) {
-    const serialPort = new SerialPort({
-      path: port.path,
-      baudRate: 115200,
-      autoOpen: false,
-    });
+  console.log(ports);
+  const found = ports.find(port => port.friendlyName.match(portRegex) != null)
+  console.log(found);
 
-    serialPorts.push(serialPort);
+  if (!found) {
+    return false
+  }
+  
+  const port = new SerialPort({
+    path: found.path,
+    baudRate: 115200,
+  });
 
-    // // Listen for data on the port
-    // serialPort.on('data', function(data) {
-    //   console.log('Data from port', port.path, ':', data.toString());
-    // });
+  // port.open((err) => {
+  //   let errMessage = null;
+  //   if (err) {
+  //     return console.log("Error opening port: ", err.message);
+  //   }
+
+  //   console.log("Port open");
+  // });
+
+  // port listening
+  const parser = port.pipe(new ReadlineParser({ delimiter: "\n" }));
+  parser.on("data", (data) => {
+    console.log("got word from arduino: " + data);
+    // const val = JSON.parse(data)
+    let dataInserted = false;
+
+    let edge = data;
+
+    console.log(edge.split(",").length);
+
+    if (edge && edge.split(",").length == dataLength) {
+      let [
+        IDperangkat,
+        IDUplink,
+        RssiUplink,
+        IDNeighbor,
+        RssiNeighbor,
+        latitude,
+        longitude,
+        altitude,
+        suhu,
+        kelembapan,
+        roll,
+        pitch,
+        yaw,
+        vbatt,
+        tail,
+      ] = edge.split(",");
+
+      // let [
+      //   IDperangkat,
+      //   latitude,
+      //   longitude,
+      //   altitude,
+      //   jarakR,
+      //   jarakG,
+      //   arahR,
+      //   arahG,
+      //   rssi
+      // ] = edge.split(",");
+
+      if (pattern.test(IDperangkat)) {
+        // Define the data to be inserted
+        const dataQeury = {
+          id_perangkat: IDperangkat,
+          suhu: isNaN(parseFloat(suhu)) ? null : parseFloat(suhu),
+          kelembapan: isNaN(parseInt(kelembapan))
+            ? null
+            : parseInt(kelembapan),
+          lat: isNaN(parseFloat(latitude)) ? null : parseFloat(latitude),
+          lng: isNaN(parseFloat(longitude)) ? null : parseFloat(longitude),
+          roll: isNaN(parseFloat(roll)) ? null : parseFloat(roll),
+          pitch: isNaN(parseFloat(pitch)) ? null : parseFloat(pitch),
+          yaw: isNaN(parseFloat(yaw)) ? null : parseFloat(yaw),
+          vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
+          created_at: createCurrentDate(),
+          perangkat_iot_no_seri: IDperangkat,
+          edge_attribute: JSON.stringify({
+            altitude: altitude,
+            id_uplink: isNaN(IDUplink) ? null : IDUplink,
+            rssi_uplink: isNaN(parseInt(RssiUplink)) ? null : parseInt(RssiUplink),
+            id_neighbor: isNaN(IDNeighbor) ? null : IDNeighbor,
+            rssi_neighbor: isNaN(parseInt(RssiNeighbor)) ? null : parseInt(RssiNeighbor),
+          })
+        };
+
+        // Insert the data into the "monitoring_portable" table
+        connection.query(
+          "INSERT INTO monitoring_portable SET ?",
+          dataQeury,
+          function (err, result) {
+            if (err) throw err;
+            console.log("Data inserted successfully.");
+            // console.log('Result:', result);
+          }
+        );
+      }
+    }
   });
 });
 
@@ -83,6 +181,45 @@ SerialPort.list().then(function (ports) {
 //   }
 // })
 
+const createCurrentDate = () => {
+  let date_ob = new Date();
+
+  // current date
+  // adjust 0 before single digit date
+  let date = ("0" + date_ob.getDate()).slice(-2);
+
+  // current month
+  let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+
+  // current year
+  let year = date_ob.getFullYear();
+
+  // current hours
+  let hours = ("0" + date_ob.getHours()).slice(-2);
+
+  // current minutes
+  let minutes = ("0" + date_ob.getMinutes()).slice(-2);
+
+  // current seconds
+  let seconds = ("0" + date_ob.getSeconds()).slice(-2);
+
+  // prints date & time in YYYY-MM-DD HH:MM:SS format
+  const myDate =
+    year +
+    "-" +
+    month +
+    "-" +
+    date +
+    " " +
+    hours +
+    ":" +
+    minutes +
+    ":" +
+    seconds;
+
+  return myDate
+}
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -113,10 +250,23 @@ app.get("/get", async (req, res) => {
   res.end();
 });
 
+app.get("/cpu-usage", async (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Content-Type", "application/json");
+
+  res.json({
+    ok: true,
+    persentage: await usegeInterval()
+  });
+
+  res.end();
+  
+});
+
 app.post("/open", (req, res) => {
   console.log(req.body.port);
 
-  const portIndex = serialPorts.findIndex((p) => p.path === req.body.port);
+  // const portIndex = serialPorts.findIndex((p) => p.path === req.body.port);
 
   if (portIndex === -1) {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -125,171 +275,11 @@ app.post("/open", (req, res) => {
       error: {
         message: "Port Tidak ditemukan",
       },
-      ports: serialPorts,
+      // ports: serialPorts,
     });
     return console.log("Error opening port: ", "Port tidak ditemukan");
   }
 
-  const port = serialPorts[portIndex];
-
-  if (port.isOpen) {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.status(400);
-    res.send({
-      error: {
-        message: "Port already open",
-      },
-    });
-    return console.log("Error opening port: ", "Port already open");
-  }
-  port.open((err) => {
-    console.log("Port open");
-    let errMessage = null;
-    if (err) {
-      console.log(err);
-      res.status(500);
-      res.send({
-        error: {
-          message: err.message,
-        },
-      });
-      return console.log("Error opening port: ", err.message);
-    }
-    res.json({ status: "ok" });
-    res.end();
-  });
-
-  // port listening
-  const parser = port.pipe(new ReadlineParser({ delimiter: "\n" }));
-  parser.on("data", (data) => {
-    console.log("got word from arduino: " + data);
-    // const val = JSON.parse(data)
-    let dataInserted = false;
-
-    let edge = data;
-
-    // if (data.split("&").length == 2 && !dataInserted) {
-    //   let [repeter, edge] = data.split("&");
-    //   console.log(edge);
-    // }
-
-    console.log(edge.split(",").length);
-
-    if (edge && edge.split(",").length == 11) {
-      let [
-        IDperangkat,
-        latitude,
-        longitude,
-        altitude,
-        suhu,
-        kelembapan,
-        roll,
-        pitch,
-        yaw,
-        vbatt,
-        tail,
-      ] = edge.split(",");
-
-      // let [
-      //   IDperangkat,
-      //   latitude,
-      //   longitude,
-      //   altitude,
-      //   jarakR,
-      //   jarakG,
-      //   arahR,
-      //   arahG,
-      //   rssi
-      // ] = edge.split(",");
-
-      if (pattern.test(IDperangkat)) {
-        let date_ob = new Date();
-
-        // current date
-        // adjust 0 before single digit date
-        let date = ("0" + date_ob.getDate()).slice(-2);
-
-        // current month
-        let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-
-        // current year
-        let year = date_ob.getFullYear();
-
-        // current hours
-        let hours = ("0" + date_ob.getHours()).slice(-2);
-
-        // current minutes
-        let minutes = ("0" + date_ob.getMinutes()).slice(-2);
-
-        // current seconds
-        let seconds = ("0" + date_ob.getSeconds()).slice(-2);
-
-        // prints date & time in YYYY-MM-DD HH:MM:SS format
-        const myDate =
-          year +
-          "-" +
-          month +
-          "-" +
-          date +
-          " " +
-          hours +
-          ":" +
-          minutes +
-          ":" +
-          seconds;
-
-        // Define the data to be inserted
-        const dataQeury = {
-          id_perangkat: IDperangkat,
-          suhu: isNaN(parseFloat(suhu)) ? null : parseFloat(suhu),
-          kelembapan: isNaN(parseFloat(kelembapan))
-            ? null
-            : parseFloat(kelembapan),
-          lat: isNaN(parseFloat(latitude)) ? null : parseFloat(latitude),
-          lng: isNaN(parseFloat(longitude)) ? null : parseFloat(longitude),
-          roll: isNaN(parseFloat(roll)) ? null : parseFloat(roll),
-          pitch: isNaN(parseFloat(pitch)) ? null : parseFloat(pitch),
-          yaw: isNaN(parseFloat(yaw)) ? null : parseFloat(yaw),
-          vbatt: isNaN(parseFloat(vbatt)) ? null : parseFloat(vbatt),
-          created_at: myDate,
-          perangkat_iot_no_seri: req.body.noSeriEdge,
-          edge_attribute: JSON.stringify({
-            altitude: altitude,
-          })
-        };
-
-        // const dataQeury = {
-        //   id_perangkat: IDperangkat,
-        //   lat: latitude,
-        //   lng: longitude,
-        //   created_at: myDate,
-        //   perangkat_iot_no_seri: req.body.noSeriEdge,
-          // edge_attribute: JSON.stringify({
-          //   altitude: altitude,
-          //   jarakR: jarakR,
-          //   jarakG: jarakG,
-          //   arahR: arahR,
-          //   arahG: arahG,
-          //   rssi: rssi
-          // })
-        // }
-
-        // Set the flag to true to prevent further inserts
-        dataInserted = true;
-
-        // Insert the data into the "monitoring_portable" table
-        connection.query(
-          "INSERT INTO monitoring_portable SET ?",
-          dataQeury,
-          function (err, result) {
-            if (err) throw err;
-            console.log("Data inserted successfully.");
-            // console.log('Result:', result);
-          }
-        );
-      }
-    }
-  });
 });
 
 app.post("/close", (req, res) => {
