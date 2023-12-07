@@ -38,8 +38,8 @@ let loraStatus = 0
 let persentageCpuUsage = 0
 const cpu = osu.cpu;
 const dataLength = 12
-// const portRegex = /Silicon Labs CP210x USB to UART Bridge/g;
-const portRegex = /USB-Enhanced-SERIAL CH9102/g;
+const portRegex = /Silicon Labs CP210x USB to UART Bridge/g;
+// const portRegex = /USB-Enhanced-SERIAL CH9102/g;
 
 async function usegeInterval(){
   return await cpu.usage()
