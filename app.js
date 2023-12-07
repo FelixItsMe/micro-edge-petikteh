@@ -38,7 +38,7 @@ let loraStatus = 0
 let persentageCpuUsage = 0
 const cpu = osu.cpu;
 const dataLength = 12
-const portRegex = /Silicon Labs CP210x USB to UART Bridge/g;
+const portRegex = /Silicon_Labs_CP2102_USB_to_UART_Bridge/g;
 // const portRegex = /USB-Enhanced-SERIAL CH9102/g;
 
 async function usegeInterval(){
@@ -48,7 +48,7 @@ async function usegeInterval(){
 SerialPort.list().then(function (ports) {
   // Open a serial port for each available port
   console.log(ports);
-  const found = ports.find(port => port.friendlyName.match(portRegex) != null)
+  const found = ports.find(port => port.pnpId.match(portRegex) != null)
   console.log(found);
 
   if (!found) {
