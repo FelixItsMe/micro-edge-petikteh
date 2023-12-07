@@ -48,7 +48,7 @@ async function usegeInterval(){
 SerialPort.list().then(function (ports) {
   // Open a serial port for each available port
   console.log(ports);
-  const found = ports.find(port => port.pnpId.match(portRegex) != null)
+  const found = ports.find(port => port.pnpId?.match(portRegex) != null)
   console.log(found);
 
   if (!found) {
